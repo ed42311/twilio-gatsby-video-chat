@@ -1,42 +1,30 @@
 import React, { useEffect } from 'react';
-import { navigate } from 'gatsby';
 import useTwilioVideo from '../hooks/use-twilio-video';
+import { navigate } from 'gatsby';
 
 const VideoDisplay = ({ roomID }) => {
-  const {
-    token,
-    videoRef,
-    activeRoom,
-    startVideo,
-    leaveRoom,
-  } = useTwilioVideo();
+  const { state, startVideo, leaveRoom, videoRef } = useTwilioVideo();
 
   useEffect(() => {
-    if (!roomID) {
-      navigate('/');
+    if (!state.token) {
+      navigate('/', { state: { roomName: roomID } });
     }
 
-    if (!token) {
-      navigate('/', { state: { room: roomID } });
-    }
-
-    if (!activeRoom) {
+    if (!state.room) {
       startVideo();
     }
 
-    // Add a window listener to disconnect if the tab is closed. This works
-    // around a looooong lag before Twilio catches that the video is gone.
     window.addEventListener('beforeunload', leaveRoom);
 
     return () => {
       window.removeEventListener('beforeunload', leaveRoom);
     };
-  }, [token, roomID, activeRoom, startVideo, leaveRoom]);
+  }, [state, roomID, startVideo, leaveRoom]);
 
   return (
     <>
       <h1>Room: “{roomID}”</h1>
-      {activeRoom && (
+      {state.room && (
         <button className="leave-room" onClick={leaveRoom}>
           Leave Room
         </button>
